@@ -1,0 +1,11 @@
+{
+  "_note": "形态清单。width = 显示宽度（像素），高度按原图比例自动算；title = 菜单里显示的名字。顺序即右键菜单顺序，第 1 个为默认形态。",
+  "adult": false,
+  "adultWidth": 196,
+  "headFraction": 0.42,
+  "targetHead": 0.31,
+  "forms": [
+    { "file": "whale-girl-transparent.png", "title": "Q版", "width": 196 },
+    { "file": "whale-girl-adult.png", "title": "成年形态", "width": 200 }
+  ]
+}

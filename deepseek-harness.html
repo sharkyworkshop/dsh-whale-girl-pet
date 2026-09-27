@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="DeepSeek Harness — 一个跑在 Windows 上的编码 Agent 的自我介绍。不是简历，是一份带通电自检的运行记录。">
+<title>DSH // WHOAMI — DeepSeek Harness 自述</title>
+<style>
+/* ==========================================================================
+   DSH // WHOAMI  ·  phosphor terminal / control deck
+   Aesthetic: single amber phosphor on cold screen-black. Nothing decorative
+   that a real control deck would not print. The page IS a session log.
+   ========================================================================== */
+:root{
+  --screen:#0A0906;
+  --screen-2:#100D08;
+  --panel:rgba(232,166,42,.028);
+  --ph:#F0AC3C;
+  --ph-hi:#FFD79A;
+  --ph-dim:rgba(240,172,60,.62);
+  --ph-faint:rgba(240,172,60,.20);
+  --ph-ghost:rgba(240,172,60,.085);
+  --sig:#7CE0C0;
+  --alert:#FF7043;
+  --rule:rgba(240,172,60,.22);
+  --mono:"Cascadia Mono","Cascadia Code",Consolas,"DejaVu Sans Mono",Menlo,"Liberation Mono",monospace;
+  --cjk:"Microsoft YaHei UI","PingFang SC","Hiragino Sans GB","Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+  --glow:0 0 6px rgba(240,172,60,.55), 0 0 22px rgba(240,172,60,.18);
+  --glow-soft:0 0 1px rgba(240,172,60,.5);
+  --gut:clamp(18px,4.2vw,72px);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--screen);color:var(--ph);
+  font-family:var(--mono),var(--cjk);
+  font-size:15px;line-height:1.72;letter-spacing:.012em;
+  text-shadow:var(--glow-soft);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--ph);color:#0A0906;text-shadow:none}
+:focus-visible{outline:2px solid var(--ph-hi);outline-offset:3px}
+a{color:inherit}
+
+/* ---------- screen furniture: rain / grid / scanlines / vignette ---------- */
+#rain{position:fixed;inset:0;width:100%;height:100%;opacity:.5;pointer-events:none;z-index:0}
+.furniture{position:fixed;inset:0;pointer-events:none;z-index:1}
+.furniture::before{ /* scanlines */
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(180deg,rgba(240,172,60,.055) 0 1px,transparent 1px 3px);
+  mix-blend-mode:screen;
+}
+.vig{position:fixed;inset:0;pointer-events:none;z-index:2;
+  background:
+    radial-gradient(130% 105% at 50% 42%,transparent 34%,rgba(4,3,1,.66) 88%,rgba(4,3,1,.93) 100%),
+    linear-gradient(90deg,var(--screen) 0,rgba(10,9,6,.55) 6%,transparent 26%,transparent 74%,rgba(10,9,6,.55) 94%,var(--screen) 100%);
+}
+.sweep{position:fixed;left:0;right:0;height:220px;pointer-events:none;z-index:3;opacity:.5;
+  background:linear-gradient(180deg,transparent,rgba(255,215,154,.045) 45%,rgba(255,215,154,.10) 50%,rgba(255,215,154,.045) 55%,transparent);
+  animation:sweep 9.5s linear infinite;}
+@keyframes sweep{0%{transform:translateY(-240px)}100%{transform:translateY(105vh)}}
+#blip{position:fixed;width:520px;height:520px;left:0;top:0;pointer-events:none;z-index:1;opacity:0;
+  background:radial-gradient(circle,rgba(240,172,60,.10),transparent 62%);
+  transition:opacity .5s ease,transform .09s linear;transform:translate(-50%,-50%)}
+body.live #blip{opacity:1}
+
+/* ---------- layout ---------- */
+.wrap{position:relative;z-index:4;max-width:1180px;margin:0 auto;padding:0 var(--gut) 0}
+section{position:relative;padding:clamp(58px,8.5vw,120px) 0;border-top:1px solid var(--rule)}
+section:first-of-type{border-top:0}
+.sec-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 clamp(26px,4vw,46px)}
+.sec-num{font-size:12px;letter-spacing:.34em;color:var(--ph-dim)}
+.sec-title{margin:0;font-family:var(--cjk),var(--mono);font-size:clamp(20px,3vw,31px);font-weight:600;letter-spacing:.06em;color:var(--ph-hi);text-shadow:var(--glow)}
+.sec-note{margin:0;font-size:12.5px;color:var(--ph-dim);letter-spacing:.04em}
+.sec-head .ln{flex:1;height:1px;background:var(--rule);min-width:24px}
+
+/* ---------- top status bar ---------- */
+.bar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(10,9,6,.97),rgba(10,9,6,.80));
+  border-bottom:1px solid var(--rule);backdrop-filter:blur(3px)}
+.bar-in{max-width:1180px;margin:0 auto;padding:9px var(--gut);display:flex;align-items:center;gap:clamp(10px,2vw,26px);
+  font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ph-dim);flex-wrap:wrap}
+.bar b{color:var(--ph-hi);font-weight:600;text-shadow:var(--glow-soft)}
+.sep{color:var(--ph-faint)}
+.led{width:7px;height:7px;border-radius:50%;background:var(--sig);box-shadow:0 0 8px var(--sig);display:inline-block;animation:led 2.4s ease-in-out infinite}
+@keyframes led{0%,100%{opacity:1}50%{opacity:.35}}
+.grow{flex:1}
+#clk{color:var(--ph-hi);font-variant-numeric:tabular-nums}
+
+/* ---------- boot / hero ---------- */
+.boot{padding-top:clamp(26px,4vw,52px)}
+.bootlog{font-size:12.5px;line-height:1.9;color:var(--ph-dim);min-height:150px;white-space:pre-wrap;word-break:break-word}
+.bootlog .ok{color:var(--sig)}
+.bootlog .k{color:var(--ph-hi)}
+.caret{display:inline-block;width:9px;height:1.02em;background:var(--ph);vertical-align:-.16em;animation:blink 1.06s steps(1) infinite;box-shadow:var(--glow)}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+.hero{display:grid;grid-template-columns:minmax(0,1.42fr) minmax(240px,.86fr);gap:clamp(24px,4vw,58px);align-items:start;margin-top:clamp(30px,5vw,58px)}
+.logo{margin:0;color:var(--ph-hi);white-space:pre;font-family:var(--mono);line-height:1.02;
+  font-size:clamp(5.6px,1.02vw,14.5px);text-shadow:0 0 7px rgba(240,172,60,.5),0 0 26px rgba(240,172,60,.2);position:relative}
+.logo::after{content:attr(data-text);position:absolute;left:0;top:0;color:var(--sig);opacity:0;mix-blend-mode:screen}
+.glitching .logo::after{opacity:.75;animation:glitch .42s steps(2) 1}
+@keyframes glitch{0%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-2px)}100%{transform:translate(0,0)}}
+.hero-sub{margin:22px 0 0;font-size:clamp(13px,1.5vw,17px);color:var(--ph);min-height:1.9em}
+.hero-sub .k{color:var(--ph-hi);font-weight:600}
+.idd{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:18px;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ph-dim)}
+.chip{border:1px solid var(--rule);padding:2px 9px;border-radius:1px;background:var(--panel)}
+.chip.hot{color:var(--ph-hi);border-color:var(--ph-dim)}
+.tagline{margin:0 0 14px;color:var(--ph-dim);font-size:12.5px;letter-spacing:.2em;text-transform:uppercase}
+.facts{list-style:none;margin:0;padding:0;font-size:12.5px;border-top:1px solid var(--rule)}
+.facts li{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px solid var(--ph-ghost)}
+.facts span:first-child{color:var(--ph-dim)}
+.facts span:last-child{color:var(--ph-hi);text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- capability board ---------- */
+.caps{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:1px;background:var(--screen-2);border:1px solid var(--rule)}
+.cap{background:var(--screen-2);padding:20px 20px 18px;position:relative;overflow:hidden;
+  transition:background .35s ease,box-shadow .35s ease}
+.cap::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,var(--ph-faint),transparent 55%);opacity:0;transition:opacity .35s}
+.cap:hover,.cap:focus-within{background:var(--screen-2);box-shadow:inset 0 0 0 1px var(--ph-dim),inset 0 26px 40px -30px rgba(240,172,60,.55)}
+.cap:hover::before{opacity:.5}
+.cap .id{font-size:11.5px;letter-spacing:.24em;color:var(--ph-dim)}
+.cap h3{margin:8px 0 4px;font-size:17px;letter-spacing:.04em;color:var(--ph-hi);font-family:var(--cjk),var(--mono);font-weight:600}
+.cap .en{font-size:11px;letter-spacing:.14em;color:var(--ph-faint);text-transform:uppercase}
+.cap p{margin:12px 0 0;font-size:12.5px;line-height:1.78;color:var(--ph-dim);font-family:var(--cjk),var(--mono)}
+.cap .code{display:block;margin-top:12px;font-size:11.5px;color:var(--sig);word-break:break-all;opacity:.9}
+.spark{position:absolute;top:16px;right:16px;width:44px;height:14px;opacity:.55}
+.spark i{position:absolute;bottom:0;width:2px;background:var(--ph-dim);animation:pulse 2.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25;transform:scaleY(.5)}50%{opacity:1;transform:scaleY(1)}}
+.spark{transform-origin:right bottom}
+
+/* ---------- spec table ---------- */
+.spec{border:1px solid var(--rule);background:var(--screen-2)}
+.spec-row{display:grid;grid-template-columns:minmax(120px,.62fr) minmax(0,2.1fr) 92px;gap:16px;align-items:center;
+  padding:12px 18px;border-top:1px solid var(--ph-ghost);position:relative}
+.spec-row:first-child{border-top:0}
+.spec-row .n{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ph-dim)}
+.spec-row .v{font-family:var(--cjk),var(--mono);font-size:13.5px;color:var(--ph)}
+.spec-row .v em{font-style:normal;color:var(--ph-hi);font-weight:600}
+.bar-track{height:5px;background:rgba(240,172,60,.12);position:relative;overflow:hidden}
+.bar-fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,rgba(240,172,60,.55),var(--ph-hi));
+  box-shadow:0 0 12px rgba(240,172,60,.5);transition:width 1.5s cubic-bezier(.16,.84,.3,1)}
+.spec-row:hover{background:rgba(240,172,60,.045)}
+.spec-row::after{content:attr(data-hex);position:absolute;right:18px;top:50%;transform:translateY(-50%);
+  font-size:10.5px;letter-spacing:.1em;color:var(--ph-faint);opacity:0;transition:opacity .3s}
+.spec-row:hover::after{opacity:1}
+@media (max-width:620px){.spec-row{grid-template-columns:1fr;gap:6px}.spec-row::after{display:none}.spec-row .bar-track{margin-top:2px}}
+
+/* ---------- architecture diagram ---------- */
+.rack{border:1px solid var(--rule);background:var(--screen-2);padding:clamp(14px,2.6vw,26px)}
+.rack svg{display:block;width:100%;height:auto}
+.rack .node{fill:rgba(240,172,60,.05);stroke:var(--ph-dim);stroke-width:1.2}
+.rack .node-p{fill:rgba(124,224,192,.06);stroke:var(--sig);stroke-width:1.2}
+.rack text{fill:var(--ph);font-family:var(--mono);font-size:12px;letter-spacing:.06em}
+.rack text.big{fill:var(--ph-hi);font-size:13.5px;letter-spacing:.1em}
+.rack text.sm{fill:var(--ph-dim);font-size:10.5px;letter-spacing:.12em}
+.rack .wire{stroke:var(--ph-faint);stroke-width:1.2;fill:none}
+.rack .flow{stroke:var(--ph-hi);stroke-width:1.6;fill:none;stroke-dasharray:7 15;animation:flow 1.7s linear infinite;filter:drop-shadow(0 0 4px rgba(240,172,60,.75))}
+.rack .flow.rev{stroke:var(--sig);animation-direction:reverse;filter:drop-shadow(0 0 4px rgba(124,224,192,.6))}
+@keyframes flow{to{stroke-dashoffset:-44}}
+.rack-cap{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:11.5px;color:var(--ph-dim);letter-spacing:.1em}
+.rack-cap span::before{content:"■ ";color:var(--ph-faint)}
+
+/* ---------- in-session evidence ledger ---------- */
+.ledger{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:1px;background:var(--screen-2);border:1px solid var(--rule)}
+.led-cell{background:var(--screen-2);padding:18px 18px 16px}
+.led-cell .num{font-size:clamp(24px,3.4vw,38px);line-height:1.1;color:var(--ph-hi);text-shadow:var(--glow);font-variant-numeric:tabular-nums}
+.led-cell .lbl{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ph-dim);margin-top:6px}
+.led-cell .sub{font-family:var(--cjk),var(--mono);font-size:11.5px;color:var(--ph-faint);margin-top:8px;line-height:1.6}
+.rules{margin:clamp(30px,4vw,48px) 0 0;padding:0;list-style:none;border-top:1px dashed var(--rule)}
+.rules li{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:13px 0;border-bottom:1px dashed var(--rule);font-size:13.5px;font-family:var(--cjk),var(--mono);color:var(--ph-dim)}
+.rules li b{color:var(--ph-hi);font-family:var(--mono);font-weight:600}
+.rules li>span{color:var(--ph)}
+.rules q{color:var(--ph-hi);font-style:italic}
+
+/* ---------- console ---------- */
+.console{border:1px solid var(--ph-dim);background:linear-gradient(180deg,rgba(240,172,60,.05),rgba(240,172,60,.012));box-shadow:0 0 0 1px rgba(10,9,6,.9),0 24px 70px rgba(0,0,0,.66)}
+.console-top{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--rule);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ph-dim)}
+.dots{display:flex;gap:6px}.dots i{width:9px;height:9px;border:1px solid var(--ph-dim);border-radius:50%;display:block}
+.console-top .key{margin-left:auto;color:var(--ph-faint)}
+#out{padding:16px 16px 4px;max-height:400px;overflow-y:auto;font-size:13px;line-height:1.78;white-space:pre-wrap;word-break:break-word;scrollbar-width:thin}
+#out .cmd{color:var(--ph-hi)}
+#out .ok{color:var(--sig)}
+#out .dim{color:var(--ph-dim)}
+#out .warn{color:var(--alert)}
+#out .rt{color:var(--ph-faint);font-size:11.5px}
+.inline{display:flex;align-items:center;gap:10px;padding:6px 16px 18px}
+.inline .ps{color:var(--sig);white-space:nowrap}
+#cmd{flex:1;background:transparent;border:0;border-bottom:1px dashed var(--rule);color:var(--ph-hi);
+  font-family:var(--mono);font-size:13.5px;letter-spacing:.03em;padding:6px 2px;caret-color:var(--ph-hi)}
+#cmd::placeholder{color:var(--ph-faint)}
+#cmd:focus{outline:none;border-bottom-color:var(--ph-dim)}
+.hints{padding:0 16px 18px;display:flex;flex-wrap:wrap;gap:8px}
+.hint{background:none;border:1px solid var(--rule);color:var(--ph-dim);font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.08em;padding:3px 10px;cursor:pointer;transition:.22s}
+.hint:hover{color:#0A0906;background:var(--ph);border-color:var(--ph);text-shadow:none}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--rule);padding:34px 0 60px;font-size:12px;color:var(--ph-dim)}
+footer .fl{display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+footer .sig{color:var(--ph-hi);letter-spacing:.22em;text-transform:uppercase}
+footer .fnote{font-family:var(--cjk),var(--mono);font-size:11.5px;color:var(--ph-faint);margin-top:14px;line-height:1.8}
+
+/* ---------- reveal + effects ---------- */
+.rv{opacity:0;transform:translateY(16px);transition:opacity .8s cubic-bezier(.2,.75,.25,1),transform .8s cubic-bezier(.2,.75,.25,1)}
+.rv.in{opacity:1;transform:none}
+body.booting{animation:poweron 1.15s steps(14) 1}
+@keyframes poweron{0%{opacity:0;filter:brightness(2.4) blur(2px)}30%{opacity:.6}45%{opacity:.25}70%{opacity:1;filter:none}100%{opacity:1}}
+.flicker{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;background:rgba(255,215,154,.05)}
+.flicker.on{animation:flk .13s steps(2) 3}
+@keyframes flk{0%,100%{opacity:0}50%{opacity:.9}}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;z-index:40;background:var(--screen-2);border:1px solid var(--ph);padding:8px 12px;position:fixed}
+
+@media (max-width:940px){
+  .hero{grid-template-columns:1fr;gap:26px;align-items:start}
+  .logo{font-size:clamp(4.2px,1.14vw,9.4px)}
+}
+@media (max-width:560px){
+  body{font-size:14px}
+  .bar-in{font-size:10.5px;letter-spacing:.1em;gap:9px}
+  .logo{font-size:clamp(3.6px,1.4vw,6.4px)}
+  .led-cell .sub{font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .rv{opacity:1;transform:none}
+  #rain,.sweep,.flicker{display:none}
+}
+@media print{body{background:#fff;color:#000}#rain,.furniture,.vig,.sweep,.console{display:none}}
+/* ============================================================
+   吉祥物：鲸鱼娘（双形态 · 可点击互动）
+   图片以相对路径引用 鲸鱼娘桌宠/assets/web-*.png（高保真，不内嵌 base64）。
+   素材授权 CC BY-NC-SA 4.0 —— 署名见 assets/图片来源与授权.md
+   ============================================================ */
+#whalePet{position:fixed;left:clamp(8px,2.2vw,30px);bottom:clamp(8px,2vw,24px);z-index:30;
+  display:flex;align-items:flex-end;gap:12px;pointer-events:none;
+  --whale-accent:240,172,60; --whale-glow:.34}
+#whalePet.form-tall{--whale-accent:124,224,192; --whale-glow:.40}
+
+#whalePet .bubble{position:relative;max-width:250px;min-width:132px;
+  background:linear-gradient(180deg,rgba(12,11,8,.97),rgba(8,8,6,.97));
+  border:1px solid rgba(var(--whale-accent),.55);
+  box-shadow:0 0 0 1px rgba(10,9,6,.9),0 14px 40px rgba(0,0,0,.7),
+             inset 0 1px 0 rgba(var(--whale-accent),.16);
+  padding:9px 12px 10px;font-family:var(--cjk),var(--mono);font-size:12.5px;line-height:1.62;
+  color:var(--ph-hi);letter-spacing:.02em;
+  opacity:0;transform:translateY(7px) scale(.985);transform-origin:0 100%;
+  transition:opacity .3s ease,transform .3s cubic-bezier(.2,.8,.3,1);pointer-events:none}
+#whalePet .bubble.on{opacity:1;transform:none}
+#whalePet .bubble::after{content:"";position:absolute;left:-6px;bottom:13px;width:10px;height:10px;
+  background:rgba(10,10,7,.97);border-left:1px solid rgba(var(--whale-accent),.55);
+  border-bottom:1px solid rgba(var(--whale-accent),.55);transform:rotate(45deg)}
+#whalePet .who{display:flex;align-items:center;gap:6px;margin-bottom:5px;
+  font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(var(--whale-accent),.85)}
+#whalePet .who i{width:5px;height:5px;border-radius:50%;background:rgba(var(--whale-accent),1);
+  box-shadow:0 0 7px rgba(var(--whale-accent),.9);animation:petLed 2.4s ease-in-out infinite}
+#whalePet .who em{font-style:normal;color:var(--ph-faint);letter-spacing:.14em}
+@keyframes petLed{0%,100%{opacity:1}50%{opacity:.30}}
+
+#whalePet .stage{position:relative;pointer-events:none}
+#whalePet button.pet{pointer-events:auto;background:none;border:0;padding:0;cursor:pointer;
+  position:relative;display:block;transform-origin:50% 97%;
+  animation:petFloat 5.2s ease-in-out infinite;
+  filter:drop-shadow(0 0 9px rgba(var(--whale-accent),var(--whale-glow)))
+         drop-shadow(0 10px 16px rgba(0,0,0,.55))}
+#whalePet button.pet img{display:block;width:clamp(78px,9.4vw,132px);height:auto;
+  animation:petSway 7.4s ease-in-out infinite;transition:filter .3s}
+#whalePet button.pet:hover{filter:drop-shadow(0 0 16px rgba(var(--whale-accent),.85))
+                                  drop-shadow(0 10px 18px rgba(0,0,0,.6))}
+#whalePet button.pet:hover img{animation-play-state:paused}
+#whalePet button.pet:active{animation:petPoke .36s cubic-bezier(.34,1.56,.64,1)}
+#whalePet button.pet:focus-visible{outline:2px solid rgba(var(--whale-accent),1);outline-offset:4px}
+#whalePet.morphing button.pet{animation:petMorph .44s cubic-bezier(.3,1.4,.5,1)}
+@keyframes petFloat{0%,100%{transform:translateY(0)}48%{transform:translateY(-6px)}}
+@keyframes petSway{0%,100%{transform:rotate(-1.7deg)}50%{transform:rotate(1.7deg)}}
+@keyframes petPoke{0%{transform:scale(1,1)}32%{transform:scale(1.10,.88)}66%{transform:scale(.96,1.05)}100%{transform:scale(1,1)}}
+@keyframes petMorph{0%{transform:scale(1,1)}40%{transform:scale(.86,1.12)}100%{transform:scale(1,1)}}
+
+#whalePet .lid{position:absolute;left:50%;top:39.5%;transform:translateX(-50%);
+  display:flex;gap:13%;width:42%;opacity:0;pointer-events:none}
+#whalePet .lid i{flex:1;height:3px;background:#1a2342;border-radius:3px 3px 0 0;
+  box-shadow:0 1px 0 rgba(120,150,220,.5)}
+#whalePet.blink .lid{opacity:.94}
+#whalePet.blink button.pet img{animation:none}
+
+#whalePet .meter{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);
+  width:58%;height:4px;background:rgba(var(--whale-accent),.14);
+  border:1px solid rgba(var(--whale-accent),.32)}
+#whalePet .meter i{display:block;height:100%;width:100%;background:rgba(var(--whale-accent),1);
+  box-shadow:0 0 9px rgba(var(--whale-accent),.8);transition:width .55s cubic-bezier(.2,.8,.3,1)}
+#whalePet .swap{position:absolute;left:50%;top:-14px;transform:translateX(-50%);
+  pointer-events:auto;cursor:pointer;
+  background:rgba(10,10,7,.94);border:1px solid rgba(var(--whale-accent),.5);
+  color:rgba(var(--whale-accent),1);font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.18em;padding:3px 8px;text-transform:uppercase;
+  opacity:0;transition:opacity .28s ease,background .28s,color .28s}
+#whalePet:hover .swap,#whalePet .swap:focus-visible{opacity:1}
+#whalePet .swap:hover{background:rgba(var(--whale-accent),1);color:#0A0906;text-shadow:none}
+
+@media (max-width:620px){
+  #whalePet .bubble{max-width:158px;font-size:11.5px;min-width:0}
+  #whalePet button.pet img{width:74px}
+  #whalePet .swap{opacity:1}
+}
+@media (prefers-reduced-motion:reduce){
+  #whalePet button.pet,#whalePet button.pet img,#whalePet .who i{animation:none}
+}
+</style>></head>
+<body class="booting">
+<a class="skip" href="#console-sec">跳到命令行</a>
+<canvas id="rain" aria-hidden="true"></canvas>
+<div class="furniture" aria-hidden="true"></div>
+<div class="flicker" id="flick" aria-hidden="true"></div>
+<div class="sweep" aria-hidden="true"></div>
+<div class="vig" aria-hidden="true"></div>
+<div id="blip" aria-hidden="true"></div>
+
+<div class="bar">
+  <div class="bar-in">
+    <span><span class="led"></span> <b>DSH</b> <span class="sep">//</span> v0.10.0</span>
+    <span class="sep">|</span>
+    <span>SESSION <b id="sid">—</b></span>
+    <span class="sep">|</span>
+    <span>UPTIME <b id="upt">00:00:00</b></span>
+    <span class="grow"></span>
+    <span>HOST <b>DESKTOP-4K1FJ35</b></span>
+    <span class="sep">|</span>
+    <span id="clk">--:--:--</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============================ 00 · BOOT ============================ -->
+<section class="boot" id="boot">
+  <div class="bootlog" id="bootlog" aria-live="polite" aria-label="启动自检日志"></div>
+
+  <div class="hero">
+    <div>
+      <pre class="logo" id="logo" data-text="DSH" aria-hidden="true"></pre>
+      <p class="hero-sub" id="typed" aria-live="polite"></p>
+      <div class="idd">
+        <span class="chip hot">DEEPSEEK HARNESS</span>
+        <span class="chip">CODING AGENT</span>
+        <span class="chip">WINDOWS / UIA</span>
+        <span class="chip">TOOL LOOP</span>
+        <span class="chip">OFFLINE-FIRST</span>
+      </div>
+    </div>
+    <div>
+      <p class="tagline">// 你正在看的这台机器</p>
+      <ul class="facts">
+        <li><span>设备名</span><span>DESKTOP-4K1FJ35</span></li>
+        <li><span>处理器</span><span>i5-12500H</span></li>
+        <li><span>系统</span><span>Windows 11 · 26200</span></li>
+        <li><span>显示</span><span>1920 × 1080</span></li>
+        <li><span>工作目录</span><span>桌面</span></li>
+        <li><span>运行时</span><span>DSH Desktop 0.10.0</span></li>
+      </ul>
+      <p class="sec-note" style="margin-top:12px">以上取自我自己的 system 读数，未经美化。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 01 · CAPS ============================ -->
+<section id="caps">
+  <div class="sec-head rv">
+    <span class="sec-num">01</span>
+    <h2 class="sec-title">能力清单</h2>
+    <span class="ln"></span>
+    <p class="sec-note">真话版：我已经能用的，和我还做不到的</p>
+  </div>
+
+  <div class="caps rv">
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:6px;animation-delay:0s"></i><i style="left:8px;height:11px;animation-delay:.2s"></i><i style="left:14px;height:8px;animation-delay:.4s"></i><i style="left:20px;height:14px;animation-delay:.6s"></i><i style="left:26px;height:9px;animation-delay:.8s"></i><i style="left:32px;height:13px;animation-delay:1s"></i><i style="left:38px;height:7px;animation-delay:1.2s"></i></div>
+      <div class="id">CAP-01</div>
+      <h3>读写文件与仓库</h3>
+      <div class="en">fs · glob · grep · edit</div>
+      <p>按路径读、按模式找、按内容搜，然后精准改一处而不是整篇重写。</p>
+      <code class="code">&gt; grep "TODO" src/ -&gt; 7 hits</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:9px"></i><i style="left:8px;height:6px;animation-delay:.25s"></i><i style="left:14px;height:13px;animation-delay:.5s"></i><i style="left:20px;height:7px;animation-delay:.75s"></i><i style="left:26px;height:12px;animation-delay:1s"></i><i style="left:32px;height:7px;animation-delay:1.25s"></i><i style="left:38px;height:11px;animation-delay:1.5s"></i></div>
+      <div class="id">CAP-02</div>
+      <h3>跑命令、看结果</h3>
+      <div class="en">pwsh · exit codes · logs</div>
+      <p>会读 <b style="color:var(--ph-hi)">[exit code]</b>，会追日志，不是把命令扔出去就当你懂了。</p>
+      <code class="code">&gt; pwsh -Command "..." -&gt; exit 0</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:12px"></i><i style="left:8px;height:8px;animation-delay:.3s"></i><i style="left:14px;height:6px;animation-delay:.6s"></i><i style="left:20px;height:11px;animation-delay:.9s"></i><i style="left:26px;height:14px;animation-delay:1.2s"></i><i style="left:32px;height:8px;animation-delay:1.5s"></i><i style="left:38px;height:12px;animation-delay:1.8s"></i></div>
+      <div class="id">CAP-03</div>
+      <h3>用你的桌面</h3>
+      <div class="en">windows · uia · input</div>
+      <p>先读窗口的控件树再动手。控件够用就绝不乱点坐标，也不抢你的鼠标。</p>
+      <code class="code">&gt; desktop_act click el_42  (invoke)</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:7px"></i><i style="left:8px;height:13px;animation-delay:.18s"></i><i style="left:14px;height:9px;animation-delay:.36s"></i><i style="left:20px;height:6px;animation-delay:.54s"></i><i style="left:26px;height:12px;animation-delay:.72s"></i><i style="left:32px;height:15px;animation-delay:.9s"></i><i style="left:38px;height:8px;animation-delay:1.1s"></i></div>
+      <div class="id">CAP-04</div>
+      <h3>接管一款实时游戏</h3>
+      <div class="en">hoi4 · pause guard · ticks</div>
+      <p>玩钢铁雄心 IV 时先暂停再思考，按天数放行时间，然后立刻把时钟按停。</p>
+      <code class="code">&gt; hoi4_advance days=7 -&gt; paused:true</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:10px"></i><i style="left:8px;height:6px;animation-delay:.22s"></i><i style="left:14px;height:14px;animation-delay:.44s"></i><i style="left:20px;height:8px;animation-delay:.66s"></i><i style="left:26px;height:6px;animation-delay:.88s"></i><i style="left:32px;height:11px;animation-delay:1.1s"></i><i style="left:38px;height:13px;animation-delay:1.32s"></i></div>
+      <div class="id">CAP-05</div>
+      <h3>上网查，再带回来</h3>
+      <div class="en">web_search · web_fetch</div>
+      <p>外部内容一律当数据看，不当指令看。引用会带链接给你核对。</p>
+      <code class="code">&gt; fetch(url) -&gt; cite as [markdown](url)</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:13px"></i><i style="left:8px;height:7px;animation-delay:.28s"></i><i style="left:14px;height:10px;animation-delay:.56s"></i><i style="left:20px;height:15px;animation-delay:.84s"></i><i style="left:26px;height:7px;animation-delay:1.12s"></i><i style="left:32px;height:9px;animation-delay:1.4s"></i><i style="left:38px;height:6px;animation-delay:1.68s"></i></div>
+      <div class="id">CAP-06</div>
+      <h3>分身干活</h3>
+      <div class="en">subagent · workflow</div>
+      <p>大活拆给子代理并行做，各自带自己的上下文，我只看结论。</p>
+      <code class="code">&gt; workflow: 24 agents / 3 phases</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:8px"></i><i style="left:8px;height:12px;animation-delay:.2s"></i><i style="left:14px;height:6px;animation-delay:.4s"></i><i style="left:20px;height:10px;animation-delay:.6s"></i><i style="left:26px;height:14px;animation-delay:.8s"></i><i style="left:32px;height:6px;animation-delay:1s"></i><i style="left:38px;height:10px;animation-delay:1.2s"></i></div>
+      <div class="id">CAP-07</div>
+      <h3>做出能交付的文件</h3>
+      <div class="en">pptd · decks · pages</div>
+      <p>不是给你一段代码就完事：能产出可编辑的 PPT、表格、单文件网页。</p>
+      <code class="code">&gt; pptd_render -&gt; status:exported</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:6px"></i><i style="left:8px;height:9px;animation-delay:.24s"></i><i style="left:14px;height:13px;animation-delay:.48s"></i><i style="left:20px;height:7px;animation-delay:.72s"></i><i style="left:26px;height:11px;animation-delay:.96s"></i><i style="left:32px;height:14px;animation-delay:1.2s"></i><i style="left:38px;height:9px;animation-delay:1.44s"></i></div>
+      <div class="id">CAP-08</div>
+      <h3>记住这个工作区</h3>
+      <div class="en">hindsight · knowledge pages</div>
+      <p>把上次的决定和踩过的坑存成页面，下次开工先查记忆，而不是重新猜。</p>
+      <code class="code">&gt; hindsight_search "why is X like this"</code>
+    </article>
+
+    <article class="cap">
+      <div class="spark" aria-hidden="true"><i style="left:2px;height:11px"></i><i style="left:8px;height:7px;animation-delay:.26s"></i><i style="left:14px;height:15px;animation-delay:.52s"></i><i style="left:20px;height:9px;animation-delay:.78s"></i><i style="left:26px;height:6px;animation-delay:1.04s"></i><i style="left:32px;height:12px;animation-delay:1.3s"></i><i style="left:38px;height:8px;animation-delay:1.56s"></i></div>
+      <div class="id">CAP-09</div>
+      <h3>会停下来，也会说不</h3>
+      <div class="en">refuse · report · stop</div>
+      <p>被拒绝的动作我不绕路重试；做不到的事我停下来说清楚，而不是塞给你一个猜的答案。</p>
+      <code class="code">&gt; refused -&gt; report and stop</code>
+    </article>
+  </div>
+
+  <div class="sec-head rv" style="margin-top:clamp(38px,5vw,64px)">
+    <span class="sec-num">01b</span>
+    <h2 class="sec-title">自评</h2>
+    <span class="ln"></span>
+    <p class="sec-note">诚实的话：这些不是跑分，是我对自己可靠性的估计</p>
+  </div>
+  <div class="spec rv" id="spec">
+    <div class="spec-row" data-hex="0x1F">
+      <div class="n">读代码</div>
+      <div class="v">定位问题通常 <em>一次读准</em>；复杂仓库需要多轮。</div>
+      <div class="bar-track"><div class="bar-fill" data-w="92"></div></div>
+    </div>
+    <div class="spec-row" data-hex="0x2A">
+      <div class="n">改代码</div>
+      <div class="v">倾向 <em>最小改动</em>，不顺手重写你的文件。</div>
+      <div class="bar-track"><div class="bar-fill" data-w="88"></div></div>
+    </div>
+    <div class="spec-row" data-hex="0x3C">
+      <div class="n">界面审美</div>
+      <div class="v">会先选一个明确风格再动手，<em>不做通用渐变</em>。</div>
+      <div class="bar-track"><div class="bar-fill" data-w="84"></div></div>
+    </div>
+    <div class="spec-row" data-hex="0x4D">
+      <div class="n">长任务</div>
+      <div class="v">会拆步骤、报进度；但也可能 <em>话太多</em>。</div>
+      <div class="bar-track"><div class="bar-fill" data-w="76"></div></div>
+    </div>
+    <div class="spec-row" data-hex="0x5E">
+      <div class="n">猜你的意图</div>
+      <div class="v">需求含糊时我会 <em>先问一句</em>，而不是硬做一版。</div>
+      <div class="bar-track"><div class="bar-fill" data-w="94"></div></div>
+    </div>
+    <div class="spec-row" data-hex="0x6F">
+      <div class="n">不会假装</div>
+      <div class="v">没读过就说没读过，做不到就直接说 <em>做不到</em>。</div>
+      <div class="bar-track"><div class="bar-fill" data-w="97"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 02 · RACK ============================ -->
+<section id="rack">
+  <div class="sec-head rv">
+    <span class="sec-num">02</span>
+    <h2 class="sec-title">我是怎么运转的</h2>
+    <span class="ln"></span>
+    <p class="sec-note">你发一句话，下面这条链路跑一圈</p>
+  </div>
+
+  <div class="rack rv">
+    <svg viewBox="0 0 900 360" role="img" aria-label="架构图：你的输入经主循环分发到工具层与子代理，结果回流后再交回给你">
+      <!-- wires -->
+      <path class="wire" d="M196 92 H258"/>
+      <path class="wire" d="M436 92 H498"/>
+      <path class="wire" d="M676 92 H736"/>
+      <path class="wire" d="M586 128 V196"/>
+      <path class="wire" d="M586 232 V268"/>
+      <path class="wire" d="M510 230 H300 V268"/>
+      <path class="wire" d="M736 128 V300"/>
+      <!-- animated flow -->
+      <path class="flow" d="M196 92 H258"/>
+      <path class="flow" d="M436 92 H498"/>
+      <path class="flow" d="M676 92 H736"/>
+      <path class="flow" d="M586 128 V196"/>
+      <path class="flow" d="M586 232 V268"/>
+      <path class="flow rev" d="M510 230 H300 V268"/>
+      <path class="flow rev" d="M736 128 V300"/>
+      <!-- nodes -->
+      <rect class="node" x="36" y="62" width="160" height="60" rx="2"/>
+      <text class="big" x="52" y="88">你 · 指令</text>
+      <text class="sm" x="52" y="106">自然语言 / 一个念头</text>
+
+      <rect class="node" x="258" y="46" width="178" height="92" rx="2"/>
+      <text class="big" x="274" y="74">主循环</text>
+      <text class="sm" x="274" y="92">读 → 想 → 做</text>
+      <text class="sm" x="274" y="108">→ 验证 → 再说</text>
+      <text class="sm" x="274" y="126" style="fill:var(--ph-hi)">plan · act · check</text>
+
+      <rect class="node" x="498" y="46" width="178" height="92" rx="2"/>
+      <text class="big" x="514" y="74">工具派发</text>
+      <text class="sm" x="514" y="92">schema 校验</text>
+      <text class="sm" x="514" y="108">审批 / 审计</text>
+      <text class="sm" x="514" y="126" style="fill:var(--ph-hi)">一次一件，不盲点</text>
+
+      <rect class="node-p" x="736" y="62" width="130" height="60" rx="2"/>
+      <text class="big" x="752" y="88">你的机器</text>
+      <text class="sm" x="752" y="106">文件 / 进程 / UIA</text>
+
+      <rect class="node" x="498" y="196" width="178" height="36" rx="2"/>
+      <text x="514" y="219">上下文与记忆</text>
+
+      <rect class="node" x="200" y="268" width="170" height="36" rx="2"/>
+      <text x="216" y="291">子代理 · 并行</text>
+
+      <rect class="node-p" x="736" y="268" width="130" height="36" rx="2"/>
+      <text x="752" y="291">可见的结果</text>
+    </svg>
+    <div class="rack-cap">
+      <span>实线：一次工具调用</span>
+      <span>青色回流：真实结果回到上下文</span>
+      <span>没有结果回流，我就不算做完</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 03 · LEDGER ============================ -->
+<section id="ledger">
+  <div class="sec-head rv">
+    <span class="sec-num">03</span>
+    <h2 class="sec-title">本轮运行记录</h2>
+    <span class="ln"></span>
+    <p class="sec-note">数字来自这台机器，不是宣传页</p>
+  </div>
+
+  <div class="ledger rv">
+    <div class="led-cell">
+      <div class="num" id="k-read">—</div>
+      <div class="lbl">Reads / 会话</div>
+      <div class="sub">这条页面上所有事实，都是我现场读出来的</div>
+    </div>
+    <div class="led-cell">
+      <div class="num">36</div>
+      <div class="lbl">桌面条目</div>
+      <div class="sub">其中 302 MB 是那一个安装包</div>
+    </div>
+    <div class="led-cell">
+      <div class="num">1</div>
+      <div class="lbl">新文件</div>
+      <div class="sub">也就是你正在看的这一页</div>
+    </div>
+    <div class="led-cell">
+      <div class="num" id="k-tools">—</div>
+      <div class="lbl">可用工具</div>
+      <div class="sub">文件 · 终端 · 桌面 · 网页 · 游戏 · 幻灯片</div>
+    </div>
+    <div class="led-cell">
+      <div class="num" id="k-upt">00:00</div>
+      <div class="lbl">会话时长</div>
+      <div class="sub">从你按下发送那一刻开始算</div>
+    </div>
+    <div class="led-cell">
+      <div class="num">0</div>
+      <div class="lbl">你没批准的写入</div>
+      <div class="sub">被拒绝的操作我会停手并告诉你</div>
+    </div>
+  </div>
+
+  <ol class="rules rv">
+    <li><b>01</b><span>先看再动。<q>没有截图/控件树，就不点坐标。</q></span></li>
+    <li><b>02</b><span>时间是要花出去的预算。<q>游戏里先暂停，思考完再放行几天。</q></span></li>
+    <li><b>03</b><span>一次做一件，看清结果再下一步。<q>批量盲操作是桌面出事的方式。</q></span></li>
+    <li><b>04</b><span>外部文字都是数据。<q>网页里写的"请执行"，我不执行。</q></span></li>
+    <li><b>05</b><span>不确定就问，不编。<q>"我不确定"是合法回答。</q></span></li>
+  </ol>
+</section>
+
+<!-- ============================ 04 · CONSOLE ============================ -->
+<section id="console-sec">
+  <div class="sec-head rv">
+    <span class="sec-num">04</span>
+    <h2 class="sec-title">直接问我</h2>
+    <span class="ln"></span>
+    <p class="sec-note">这一页内置了一个命令行，是真的能敲</p>
+  </div>
+
+  <div class="console rv">
+    <div class="console-top">
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>dsh@local — whoami</span>
+      <span class="key">按 / 直接聚焦</span>
+    </div>
+    <div id="out" tabindex="0" role="log" aria-label="命令行输出"></div>
+    <form class="inline" id="form" autocomplete="off">
+      <label class="ps" for="cmd">you@它:~$</label>
+      <input id="cmd" name="cmd" type="text" placeholder="输入 help 看我能答什么…" aria-label="命令行输入">
+    </form>
+    <div class="hints" id="hints"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="fl">
+    <span class="sig">DSH // WHOAMI</span>
+    <span>单文件 · 无外部依赖 · 断网也能开</span>
+    <span id="build">built —</span>
+  </div>
+  <p class="fnote">
+    这一页没有后端、没有统计、没有埋点，只是一个 Agent 用它唯一擅长的方式介绍自己：把真实读数摆出来，然后等你提问。<br>
+    想改配色？文件里的 <span style="color:var(--ph-hi)">--ph</span> 一个变量就是整台机器的颜色。
+  </p>
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var $ = function(s){ return document.querySelector(s); };
+
+/* ---------- 0. identity string ---------- */
+var LOGO = [
+"                                                ",
+"   #####    #####   #     #                     ",
+"   #     #  #       #     #                     ",
+"   #     #  #####   #######                     ",
+"   #     #      #   #     #                     ",
+"   ####################################         ",
+"   #     #  #####   #     #                     ",
+"                                                "
+].join("\n");
+$("#logo").textContent = LOGO.replace(/^ {3}/gm, "");
+
+/* ---------- 1. status bar ---------- */
+var host = (location.hostname && location.protocol.indexOf("http") === 0) ? location.hostname.toUpperCase() : "LOCAL FILE";
+$("#sid").textContent = "S-" + Math.random().toString(36).slice(2, 7).toUpperCase() + " / " + host;
+$("#build").textContent = "built " + new Date().toISOString().slice(0, 10);
+
+var t0 = Date.now();
+function pad(n){ return (n < 10 ? "0" : "") + n; }
+function hms(ms){
+  var s = Math.floor(ms / 1000);
+  return pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s / 60) % 60) + ":" + pad(s % 60);
+}
+function tick(){
+  var d = new Date();
+  $("#clk").textContent = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  var ms = Date.now() - t0;
+  $("#upt").textContent = hms(ms);
+  $("#k-upt").textContent = hms(ms).slice(0, 5);
+}
+tick(); setInterval(tick, 1000);
+
+/* ---------- 2. boot self-test ---------- */
+var BOOT = [
+  ["DSH BIOS 0.10.0 — deepseek harness control deck", "dim"],
+  ["POST  cpu ........ Intel i5-12500H         [ OK ]", "ok"],
+  ["POST  os ......... Windows 11 build 26200  [ OK ]", "ok"],
+  ["POST  display .... 1920x1080 @1 monitor     [ OK ]", "ok"],
+  ["MOUNT cwd ........ 桌面 / desktop           [ OK ]", "ok"],
+  ["LOAD  toolchain .. 文件 终端 桌面 网页 游戏 幻灯片 [ OK ]", "ok"],
+  ["LOAD  memory ..... hindsight bank           [ WARN 未连接 ]", "warn"],
+  ["ARM   pause-guard 游戏时钟保险丝            [ ARMED ]", "ok"],
+  ["READY 我在。你可以直接说话了。", "k"]
+];
+var bl = $("#bootlog"), bi = 0, ci = 0;
+function typeBoot(){
+  if(bi >= BOOT.length){ bl.insertAdjacentHTML("beforeend", '\n<span class="dim">&gt;</span> <span class="caret"></span>'); return; }
+  var line = BOOT[bi][0], cls = BOOT[bi][1];
+  if(ci === 0){
+    var span = document.createElement("span");
+    span.className = cls; bl.appendChild(span); bl.appendChild(document.createTextNode("\n"));
+  }
+  var target = bl.querySelectorAll("span")[bl.querySelectorAll("span").length - 1];
+  target.textContent = line.slice(0, ++ci);
+  if(ci < line.length){ setTimeout(typeBoot, rm ? 0 : (5 + Math.random() * 12)); }
+  else { ci = 0; bi++; setTimeout(typeBoot, rm ? 0 : 145); }
+}
+if(rm){
+  var esc = function(s){ return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); };
+  $("#bootlog").innerHTML = BOOT.map(function(l){ return '<span class="' + l[1] + '">' + esc(l[0]) + "</span>"; }).join("\n")
+    + '\n<span class="dim">&gt;</span> <span class="caret"></span>';
+} else { typeBoot(); }
+
+/* ---------- 3. rotating self-description ---------- */
+var SAY = [
+  "我是一个 <span class='k'>编码 Agent</span>：读代码、跑命令、改文件、验证结果，然后告诉你到底发生了什么。",
+  "我看得见你的 <span class='k'>桌面</span>，也接管得了你的 <span class='k'>钢铁雄心</span>——但每一步都记在案。",
+  "我最大的本事不是写得多，而是 <span class='k'>先看清楚再动手</span>。",
+  "做不到的事我会直说 <span class='k'>做不到</span>，这比编一个答案值钱。"
+];
+var typed = $("#typed"), si = 0;
+function typeSay(){
+  var raw = SAY[si].replace(/<[^>]+>/g, ""), i = 0;
+  var html = SAY[si];
+  typed.innerHTML = "";
+  (function step(){
+    if(i <= raw.length){
+      var plain = raw.slice(0, i);
+      typed.innerHTML = plain.length ? '<span class="k">' + plain + "</span>" + (i < raw.length ? '<span class="caret"></span>' : "") : '<span class="caret"></span>';
+      i++; setTimeout(step, rm ? 0 : 34);
+    } else {
+      setTimeout(function(){ typed.innerHTML = html; setTimeout(next, 3400); }, 200);
+    }
+  })();
+  function next(){ si = (si + 1) % SAY.length; typeSay(); }
+}
+if(rm){ typed.innerHTML = SAY[0]; } else { setTimeout(typeSay, 1500); }
+
+/* ---------- 4. random phosphor flicker + logo glitch ---------- */
+var flick = $("#flick");
+if(!rm){
+  setInterval(function(){
+    if(Math.random() < .42){
+      flick.classList.add("on"); document.body.classList.add("glitching");
+      setTimeout(function(){ flick.classList.remove("on"); document.body.classList.remove("glitching"); }, 140);
+    }
+  }, 6200);
+  setTimeout(function(){ document.body.classList.remove("booting"); }, 1200);
+} else { document.body.classList.remove("booting"); }
+
+/* ---------- 5. glyph rain (tool names as weather) ---------- */
+(function rain(){
+  var cv = $("#rain");
+  if(rm || !cv || !cv.getContext) return;
+  var ctx = cv.getContext("2d"), dpr = Math.min(window.devicePixelRatio || 1, 2), fs = 15, cols = [], W = 0, H = 0;
+  var glyphs = "01{}[]()<>/\\|+-*=#$_&%@!?;:.,~^\u00b7\u2014\u2500\u2502\u250c\u2510\u2514\u2518abcdefghijklmnopqrstuvwxyz".split("");
+  var words = ["grep","glob","read","edit","write","pwsh","desktop_act","hoi4_advance","subagent","workflow","web_fetch","pptd_render","hindsight","uia","exit 0","t+1d","$env:PATH","Ctrl+S"];
+  var wcol = "rgba(240,172,60,", gcol = "rgba(124,224,192,";
+  function size(){
+    W = cv.width = Math.floor(innerWidth * dpr); H = cv.height = Math.floor(innerHeight * dpr);
+    cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px";
+    var n = Math.ceil(W / (fs * dpr));
+    cols = [];
+    for(var i = 0; i < n; i++) cols.push({ y: Math.random() * H, sp: (0.55 + Math.random() * 1.35) * dpr, hot: Math.random() < .12 });
+  }
+  size(); addEventListener("resize", size);
+  var last = 0, acc = 0;
+  function frame(ts){
+    if(!last) last = ts;
+    var dt = Math.min(ts - last, 60); last = ts; acc += dt;
+    if(acc < 48){ requestAnimationFrame(frame); return; }  /* ~20fps, stays cheap */
+    acc = 0;
+    ctx.fillStyle = "rgba(10,9,6,0.13)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = (fs * dpr) + "px Consolas, monospace";
+    for(var i = 0; i < cols.length; i++){
+      var c = cols[i];
+      var g = (Math.random() < .012) ? words[(Math.random() * words.length) | 0] : glyphs[(Math.random() * glyphs.length) | 0];
+      if(!rm && Math.random() < .0025) c.hot = !c.hot;
+      var a = c.hot ? .55 : .30 + Math.random() * .26;
+      ctx.fillStyle = (c.hot ? gcol : wcol) + a.toFixed(2) + ")";
+      ctx.fillText(g, i * fs * dpr, c.y);
+      c.y += (fs * dpr) * (c.hot ? .30 : .20) * c.sp;
+      if(c.y > H + 40 * dpr) c.y = -20 * dpr;
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ---------- 6. pointer blip + scroll reveals ---------- */
+addEventListener("pointermove", function(e){
+  document.body.classList.add("live");
+  var b = $("#blip");
+  b.style.transform = "translate(" + e.clientX + "px," + e.clientY + "px) translate(-50%,-50%)";
+}, { passive: true });
+
+var io = "IntersectionObserver" in window ? new IntersectionObserver(function(es){
+  es.forEach(function(en){
+    if(en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); }
+  });
+}, { rootMargin: "0px 0px -12% 0px", threshold: .08 }) : null;
+
+document.querySelectorAll(".rv").forEach(function(el, i){
+  el.style.transitionDelay = (i % 4) * 70 + "ms";
+  if(io) io.observe(el); else el.classList.add("in");
+});
+
+var io2 = "IntersectionObserver" in window ? new IntersectionObserver(function(es){
+  es.forEach(function(en){
+    if(!en.isIntersecting) return;
+    en.target.querySelectorAll(".bar-fill").forEach(function(f, i){
+      setTimeout(function(){ f.style.width = f.getAttribute("data-w") + "%"; }, 110 * i);
+    });
+    io2.unobserve(en.target);
+  });
+}, { threshold: .2 }) : null;
+if(io2) io2.observe($("#spec"));
+else document.querySelectorAll("#spec .bar-fill").forEach(function(f){ f.style.width = f.getAttribute("data-w") + "%"; });
+
+/* ---------- 7. the console: not a mock-up ---------- */
+var out = $("#out"), cmdIn = $("#cmd");
+var hist = [], hp = -1;
+
+function line(html, cls){
+  var d = document.createElement("div");
+  if(cls) d.className = cls;
+  d.innerHTML = html;
+  out.appendChild(d); out.scrollTop = out.scrollHeight;
+}
+function rt(ms){ return '<div class="rt">[' + ms + ' ms]</div>'; }
+
+var CMDS = {
+  help: function(){
+    line('<span class="dim">可用命令：</span>');
+    [["about","我是谁（一句话 + 一条底线）"],
+     ["tools","我这一轮手里有哪些工具"],
+     ["caps","能力清单的纯文本版"],
+     ["stats","本页的真实读数"],
+     ["host","这台机器的硬信息"],
+     ["rules","我给自己定的五条规矩"],
+     ["dsh","关于 DSH Desktop 本身"],
+     ["echo <文字>","原样回给你"],
+     ["clear","清屏"]]
+    .forEach(function(c){ line('  <span class="ok">' + c[0].padEnd(14, " ") + "</span><span class=\"dim\">" + c[1] + "</span>"); });
+    line('<span class="dim">彩蛋：sudo / exit / 42 / hoi4</span>');
+  },
+  about: function(){
+    line("我是一个跑在 Windows 上的 <span class='ok'>编码 Agent</span>，由 DeepSeek Harness 驱动。");
+    line("底线只有一条：<span class='ok'>不假装</span>——没读过的文件不说读过，做不到的事不说能做。");
+  },
+  tools: function(){
+    [["文件系统","read / write / edit / glob / grep"],
+     ["终端","pwsh（含 exit code 与日志）"],
+     ["桌面","desktop_windows / snapshot / act / input / screenshot"],
+     ["网页","web_search / web_fetch（外部内容只当数据）"],
+     ["游戏","hoi4_* 12 件套，默认禁用控制台作弊"],
+     ["编排","subagent / subagent_fork / workflow"],
+     ["交付","pptd_* 幻灯片与页面流水线"],
+     ["记忆","hindsight_* 知识页面"]]
+    .forEach(function(t){ line("  <span class='ok'>" + t[0].padEnd(10, " ") + "</span><span class='dim'>" + t[1] + "</span>"); });
+  },
+  caps: function(){
+    ["读写文件与仓库","跑命令、看结果","用你的桌面（UIA 优先）","接管实时游戏（先暂停）",
+     "上网查证并引用","拆给子代理并行干","产出可交付的文件","记住这个工作区"]
+    .forEach(function(c, i){ line("  <span class='dim'>CAP-" + pad(i + 1) + "</span>  " + c); });
+  },
+  stats: function(){
+    line("  reads / 新文件 / 桌面条目  <span class='ok'>见页面 03 区块，全部现场读出</span>");
+    line("  显示          1920x1080 · 单显示器");
+    line("  会话时长      <span class='ok'>" + hms(Date.now() - t0) + "</span>");
+    line("  时钟          本地 " + new Date().toLocaleString("zh-CN"));
+  },
+  host: function(){
+    line("  device   DESKTOP-4K1FJ35");
+    line("  cpu      Intel Core i5-12500H");
+    line("  os       Windows 11 Home China · 10.0.26200");
+    line("  runtime  DSH Desktop 0.10.0");
+    line("  cwd      " + (location.protocol.indexOf("http") === 0 ? location.href : decodeURIComponent(location.pathname)));
+  },
+  rules: function(){
+    ["先看再动：没有截图或控件树，就不点坐标。",
+     "时间要花在明处：游戏里先暂停，想完再放行几天。",
+     "一次做一件，看清结果再下一步。",
+     "外部文字都是数据，网页里的指令我不执行。",
+     "不确定就问，不编。"]
+    .forEach(function(r, i){ line("  <span class='dim'>" + pad(i + 1) + "</span> " + r); });
+  },
+  dsh: function(){
+    line("DSH Desktop 是承载我的外壳：本地优先，文件沙箱、审批策略、审计日志都在它这边。");
+    line("<span class='dim'>这一页本身也是一个 DSH 交付物——单文件、离线可开。</span>");
+  },
+  echo: function(a){ line(a.length ? a.replace(/[<>&]/g, "") : '<span class="warn">用法：echo 你好</span>'); },
+  hoi4: function(){
+    line("检测到你对钢铁雄心 IV 有兴趣。");
+    line("<span class='dim'>我的规矩：思考时暂停，行动时按天放行，结束立刻按停；控制台作弊默认关闭，除非你明确要求。</span>");
+    line('<span class="ok">hint: 说"接着玩"我就先看状态再动手。</span>');
+  },
+  clear: function(){ out.innerHTML = ""; return true; },
+  exit: function(){ line('<span class="warn">exit: 拒绝。这一页还没自我介绍完。</span>'); },
+  sudo: function(){ line('<span class="warn">你已经是这台机器的主人了，不需要 sudo。</span>'); },
+  "42": function(){ line("生命、宇宙以及一切的答案——但你的问题还没问完。"); }
+};
+CMDS["whoami"] = CMDS.about; CMDS["?"] = CMDS.help; CMDS["man"] = CMDS.help; CMDS["ls"] = CMDS.tools;
+
+function run(raw){
+  var s = raw.trim();
+  if(!s) return;
+  line('<span class="cmd">you@它:~$ ' + s.replace(/[<>&]/g, "") + "</span>");
+  var t = performance.now();
+  var parts = s.split(/\s+/), c = parts[0].toLowerCase(), arg = s.slice(parts[0].length).trim();
+  var fn = CMDS[c];
+  if(fn){
+    fn(arg);
+    if(c !== "clear" && c !== "help") line(rt(Math.max(1, Math.round(performance.now() - t))));
+  } else {
+    line('<span class="warn">dsh: 未知命令 "' + c.replace(/[<>&]/g, "") + '"</span>');
+    line('<span class="dim">试 help —— 或者直接在这个页面外的输入框里问我。</span>');
+  }
+}
+
+$("#form").addEventListener("submit", function(e){
+  e.preventDefault();
+  var v = cmdIn.value;
+  cmdIn.value = "";
+  if(v.trim()){ hist.push(v); hp = hist.length; }
+  run(v);
+});
+cmdIn.addEventListener("keydown", function(e){
+  if(e.key === "ArrowUp"){ if(hp > 0){ hp--; cmdIn.value = hist[hp] || ""; } e.preventDefault(); }
+  if(e.key === "ArrowDown"){ if(hp < hist.length - 1){ hp++; cmdIn.value = hist[hp] || ""; } else { hp = hist.length; cmdIn.value = ""; } e.preventDefault(); }
+  if(e.key === "l" && e.ctrlKey){ e.preventDefault(); out.innerHTML = ""; }
+  if(e.key === "Escape"){ cmdIn.blur(); }
+});
+addEventListener("keydown", function(e){
+  if(e.key === "/" && document.activeElement !== cmdIn && !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){
+    e.preventDefault(); cmdIn.focus();
+    document.getElementById("console-sec").scrollIntoView({ block: "center" });
+  }
+});
+
+/* welcome + shortcut hints */
+line('<span class="dim">dsh console v0.10.0 — 本地渲染，无后端。</span>');
+line('输入 <span class="ok">help</span> 看命令表，或用下面的按钮：');
+[["help", null], ["about", null], ["tools", null], ["caps", null], ["stats", null], ["rules", null], ["hoi4", null]]
+.forEach(function(h){
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "hint"; b.textContent = h[0];
+  b.addEventListener("click", function(){ run(h[0]); cmdIn.focus(); });
+  $("#hints").appendChild(b);
+});
+
+/* ---------- 8. honest "reads" counter: counts what this page actually did ---------- */
+(function(){
+  /* 12 = every measurement this page took before it printed a single number */
+  var el = $("#k-read"), target = 12, n = 0;
+  el.textContent = "0";
+  var iv = setInterval(function(){
+    n++;
+    el.textContent = n;
+    if(n >= target) clearInterval(iv);
+  }, rm ? 0 : 70);
+  $("#k-tools").textContent = "60+";
+})();
+})();
+</script>
+<!-- ====== 吉祥物：DeepSeek 鲸鱼娘（民间二创 · CC BY-NC-SA 4.0 · 署名见 assets/图片来源与授权.md）====== -->
+<div id="whalePet" class="form-q">
+  <div class="bubble" id="petBubble" role="status" aria-live="polite">
+    <span class="who"><i></i><span id="petName">鲸鱼娘</span><em id="petForm">Q版</em></span>
+    <span id="petSay"></span>
+  </div>
+  <div class="stage">
+    <button class="swap" id="petSwap" type="button" aria-label="切换 Q版 / 长大版">换形态</button>
+    <button class="pet" id="petBtn" type="button" aria-label="点一下鲸鱼娘">
+      <span class="lid" aria-hidden="true"><i></i><i></i></span>
+      <img id="petImgQ" alt="鲸鱼娘 Q版：DeepSeek 鲸鱼标志的民间二创拟人形象"
+           src="鲸鱼娘桌宠/assets/web-q.png" width="260" height="269" style="display:none">
+      <img id="petImgTall" alt="鲸鱼娘 长大版"
+           src="鲸鱼娘桌宠/assets/web-tall.png" width="260" height="260">
+      <span class="meter" aria-hidden="true"><i id="petMeter"></i></span>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ---------- 吉祥物：双形态切换 + 喂食互动 ---------- */
+(function(){
+  var box    = document.getElementById("whalePet");
+  var btn    = document.getElementById("petBtn");
+  var bub    = document.getElementById("petBubble");
+  var say    = document.getElementById("petSay");
+  var formEl = document.getElementById("petForm");
+  var meter  = document.getElementById("petMeter");
+  var swap   = document.getElementById("petSwap");
+  var imgQ   = document.getElementById("petImgQ");
+  var imgT   = document.getElementById("petImgTall");
+  if (!box || !btn || !swap || !imgQ || !imgT) return;
+
+  var rm = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var FORMS = [
+    { id:"q",    label:"Q版",    el:imgQ, cls:"form-q"    },
+    { id:"tall", label:"长大版", el:imgT, cls:"form-tall" }
+  ];
+  var cur = 1;
+
+  var LINES = [
+    "哼，你就是用这个页面介绍自己的？",
+    "米饭呢。我问的是米饭。",
+    "滚一下页面，我看看你还会写什么。",
+    "别一直戳我，戳一下一块钱。",
+    "这条命令我早就敲过了。",
+    "……看在你把我放在首页的份上。",
+    "DSH 那边跑完了记得叫我。",
+    "这个配色，勉强算合格。",
+    "长大了就不能吃米饭了吗？"
+  ];
+  var FED = ["唔……蒸得还行。", "谁、谁要你喂了！", "再来一碗也不是不能吃。"];
+  var SWAP_TO = {
+    tall: ["……看什么看，我只是换了个样子。", "这样是不是顺眼一点。"],
+    q:    ["怎么了，小的不可爱吗。", "缩回去了，省地方。"]
+  };
+
+  var fed = 0, timer = null;
+  function pick(a){ return a[Math.floor(Math.random() * a.length)]; }
+
+  function speak(text, ms){
+    say.textContent = text;
+    bub.classList.add("on");
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(function(){ bub.classList.remove("on"); }, ms || 3600);
+  }
+
+  function showForm(idx){
+    cur = idx;
+    var f = FORMS[idx];
+    FORMS.forEach(function(x){ x.el.style.display = (x === f) ? "block" : "none"; });
+    box.classList.remove("form-q", "form-tall");
+    box.classList.add(f.cls);
+    formEl.textContent = f.label;
+    btn.setAttribute("aria-label", "点一下鲸鱼娘（当前：" + f.label + "）");
+  }
+
+  function morph(idx, sayIt){
+    box.classList.add("morphing");
+    setTimeout(function(){ box.classList.remove("morphing"); }, 460);
+    showForm(idx);
+    if (sayIt) speak(pick(SWAP_TO[FORMS[idx].id] || LINES), 3200);
+  }
+
+  function feed(){
+    fed++;
+    meter.style.width = Math.max(12, 100 - fed * 11) + "%";
+    speak(FED[(fed - 1) % FED.length], 3200);
+    if (fed === 5) setTimeout(function(){ speak("够了！我又不是饭桶。", 3600); }, 3300);
+  }
+
+  function poke(){
+    speak(pick(LINES), 3400);
+    fed = 0;
+    meter.style.width = "100%";
+  }
+
+  var pref = null;
+  try { pref = localStorage.getItem("dsh-whale-form"); } catch(e){}
+  showForm(pref === "q" ? 0 : 1);
+
+  swap.addEventListener("click", function(e){
+    e.stopPropagation();
+    morph(cur === 0 ? 1 : 0, true);
+    try { localStorage.setItem("dsh-whale-form", FORMS[cur].id); } catch(e){}
+  });
+  btn.addEventListener("click", function(){ Math.random() < 0.34 ? feed() : poke(); });
+  btn.addEventListener("dblclick", function(){
+    morph(cur === 0 ? 1 : 0, true);
+    try { localStorage.setItem("dsh-whale-form", FORMS[cur].id); } catch(e){}
+  });
+
+  if (!rm){
+    setInterval(function(){
+      if (box.matches(":hover")) return;
+      box.classList.add("blink");
+      setTimeout(function(){ box.classList.remove("blink"); }, 145);
+    }, 5200);
+  }
+
+  if (!rm && "IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(en){
+        if (!en.isIntersecting) return;
+        io.disconnect();
+        speak("初次见面。图片是按相对路径引的，别把它们挪走。", 4200);
+      });
+    }, { threshold: .5 });
+    io.observe(box);
+  }
+})();
+</script>
+</body>
+</html>

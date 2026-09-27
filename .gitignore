@@ -1,0 +1,18 @@
+# 编译产物、临时文件、个人内容 —— 都不要进仓库
+*.pdb
+*.log
+*.tmp
+*.bak
+*~
+
+# 桌宠运行期产物
+pet-settings.local.txt
+
+# 编辑器
+.vs/
+.vscode/.browse.VC.db*
+*.user
+
+# 系统
+Thumbs.db
+desktop.ini

@@ -1,0 +1,5 @@
+// 鲸鱼娘桌宠配置（改完保存，重启桌宠生效）
+// fullnessMinutes：从吃饱到饿透需要多少分钟（默认 22）
+fullnessMinutes=22
+// topmost：是否窗口置顶（1/0）
+topmost=1
