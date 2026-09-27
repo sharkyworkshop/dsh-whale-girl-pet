@@ -577,7 +577,7 @@ namespace WhalePet
         private int _skin;
 
         private readonly Timer _tick = new Timer();
-        private readonly Timer _blink = new Timer();
+
         private readonly Timer _hunger = new Timer();
         private readonly Timer _idleQuip = new Timer();
         private readonly Random _rnd = new Random();
@@ -608,7 +608,7 @@ namespace WhalePet
         private int _food = 1;                 // 1 米饭 2 鱼 3 包子 4 汽水
         private int _rice, _patCount;
         private float _fullness = 70f, _fedGlow, _patGlow;
-        private bool _blinking, _dragging, _hiddenTray, _topmost = true, _sleeping;
+        private bool _dragging, _hiddenTray, _topmost = true, _sleeping;
         private string _bubble = "";
         private float _bubbleT, _bubbleMax;
         private readonly Queue<KeyValuePair<long, Point>> _trail = new Queue<KeyValuePair<long, Point>>();
@@ -650,22 +650,14 @@ namespace WhalePet
 
             _tick.Interval = 16;
             _tick.Tick += (a, b) => Step(0.016f);
-            _blink.Interval = 2600;
-            _blink.Tick += (a, b) =>
-            {
-                if (_sleeping) return;
-                _blinking = true;
-                var t2 = new Timer { Interval = 150 };
-                t2.Tick += (x, y) => { _blinking = false; t2.Stop(); t2.Dispose(); };
-                t2.Start();
-            };
+
             _hunger.Interval = 4000;
             _hunger.Tick += (a, b) => Tick4s();
             _idleQuip.Interval = 9000;
             _idleQuip.Tick += (a, b) => IdleQuip();
 
             PlaceDefault();
-            _tick.Start(); _blink.Start(); _hunger.Start(); _idleQuip.Start();
+            _tick.Start(); _hunger.Start(); _idleQuip.Start();
             Say(Pick(_s.onIdle), 3.2f, 1.0f);
         }
 
@@ -1041,7 +1033,7 @@ namespace WhalePet
 
         private void Quit()
         {
-            _tick.Stop(); _blink.Stop(); _hunger.Stop(); _idleQuip.Stop();
+            _tick.Stop(); _hunger.Stop(); _idleQuip.Stop();
             _tray.Visible = false;
             Application.Exit();
         }
@@ -1223,8 +1215,7 @@ namespace WhalePet
             g.DrawImage(sprite, 0, 0, sprite.Width, sprite.Height);
             g.Restore(save);
 
-            // 眨眼弧线已移除：在角色的脸型上它读起来像长了两道眉毛，很违和。
-            // 眨眼定时器仍保留（用于轻量重绘），只是不再画闭眼线。
+            // 眨眼已整体移除：画在她脸上会被读成"长了两道眉毛"，很违和。
 
             if (_sleeping)
             {
@@ -1423,8 +1414,7 @@ namespace WhalePet
         internal void TestFeed() { Feed(); }
         internal void TestPat() { Pat(); }
         internal void TestStep() { Step(0.016f); }
-        internal void TestBlink() { _blinking = true; }
-        internal void TestBlinkOff() { _blinking = false; }
+
         internal void TestThrow(float vx, float vy) { _vx = vx; _vy = vy; _grounded = false; }
         internal void TestMoveTo(float x, float y) { _px = x; _py = y; ApplyWindowPos(); }
         internal void TestStarve() { FallAsleep(true); }
@@ -1810,11 +1800,7 @@ namespace WhalePet
             form.TestFeed();
             for (int i = 0; i < 5; i++) form.TestStep();
             Save(form, Path.Combine(outDir, "v3-feed.png"));
-            // 眨眼帧：之前自检漏了这张，所以"闭眼线画在额头上"这个 bug 一直没被发现
-            form.TestBlink();
-            form.TestStep();
-            Save(form, Path.Combine(outDir, "v3-blink.png"));
-            form.TestBlinkOff();
+
             log.AppendLine("render  : v3-*.png   形态: " + form.SkinNames());
 
             for (int i = 0; i < skins.Count; i++)
